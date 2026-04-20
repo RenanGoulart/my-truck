@@ -1,4 +1,7 @@
-import { Pressable, ScrollView, Text } from 'react-native';
+import { AntDesign } from '@expo/vector-icons';
+import { Pressable, ScrollView, Text, View } from 'react-native';
+
+import { iconForCategory } from '@/shared/lib/categoryIcon';
 
 import type { Category } from '../types';
 
@@ -17,14 +20,19 @@ export function CategoryChips({ categories, selectedId, onSelect }: Props) {
     >
       {categories.map((c) => {
         const selected = c.id === selectedId;
+        const iconName = iconForCategory(c.name, c.kind);
+        const iconColor = selected ? '#0B0F14' : (c.color ?? '#FFFFFF');
         return (
           <Pressable
             key={c.id}
             onPress={() => onSelect(c.id)}
-            className={`px-4 h-11 items-center justify-center rounded-full border ${
+            className={`flex-row items-center px-4 h-11 rounded-full border ${
               selected ? 'bg-primary border-primary' : 'bg-card border-border'
             }`}
           >
+            <View className="mr-2">
+              <AntDesign name={iconName} size={16} color={iconColor} />
+            </View>
             <Text
               className={`text-sm font-semibold ${
                 selected ? 'text-primary-fg' : 'text-white'
