@@ -1,6 +1,14 @@
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, Alert, ScrollView, Text, View } from 'react-native';
+import {
+  ActivityIndicator,
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  Text,
+  View,
+} from 'react-native';
 
 import { CategoryChips } from '@/features/categories/components/CategoryChips';
 import { useCategoriesStore } from '@/features/categories/store/categories.store';
@@ -93,36 +101,49 @@ export default function EditTransaction() {
     <>
       <Stack.Screen options={{ title: 'Editar lançamento' }} />
       <Screen>
-        <ScrollView
-          keyboardShouldPersistTaps="handled"
-          contentContainerStyle={{ paddingTop: 16, paddingBottom: 160, gap: 16 }}
+        <KeyboardAvoidingView
+          style={{ flex: 1 }}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          keyboardVerticalOffset={Platform.OS === 'ios' ? 40 : 0}
         >
-          <KindToggle value={kind} onChange={setKind} />
-          <MoneyInput
-            valueCents={amountCents}
-            onChange={setAmountCents}
-            label="Valor"
-            tint={kind === 'income' ? '#22C55E' : '#EF4444'}
-          />
-          <View>
-            <Text className="text-muted mb-2 text-sm font-medium">Categoria</Text>
-            <CategoryChips
-              categories={categories}
-              selectedId={categoryId}
-              onSelect={setCategoryId}
+          <ScrollView
+            keyboardShouldPersistTaps="handled"
+            keyboardDismissMode="interactive"
+            contentContainerStyle={{ paddingTop: 16, paddingBottom: 32, gap: 16 }}
+            showsVerticalScrollIndicator={false}
+          >
+            <KindToggle value={kind} onChange={setKind} />
+            <MoneyInput
+              valueCents={amountCents}
+              onChange={setAmountCents}
+              label="Valor"
+              tint={kind === 'income' ? '#22C55E' : '#EF4444'}
             />
-          </View>
-          <Input
-            label="Descrição"
-            value={description}
-            onChangeText={setDescription}
-            placeholder="Opcional"
-          />
-        </ScrollView>
-        <View className="absolute bottom-4 left-5 right-5 gap-3">
-          <Button label="Salvar alterações" onPress={handleSave} disabled={!canSave} loading={saving} />
-          <Button label="Excluir" variant="danger" onPress={handleDelete} />
-        </View>
+            <View>
+              <Text className="text-muted mb-2 text-sm font-medium">Categoria</Text>
+              <CategoryChips
+                categories={categories}
+                selectedId={categoryId}
+                onSelect={setCategoryId}
+              />
+            </View>
+            <Input
+              label="Descrição"
+              value={description}
+              onChangeText={setDescription}
+              placeholder="Opcional"
+            />
+            <View className="gap-3 mt-4">
+              <Button
+                label="Salvar alterações"
+                onPress={handleSave}
+                disabled={!canSave}
+                loading={saving}
+              />
+              <Button label="Excluir" variant="danger" onPress={handleDelete} />
+            </View>
+          </ScrollView>
+        </KeyboardAvoidingView>
       </Screen>
     </>
   );

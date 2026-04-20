@@ -1,7 +1,9 @@
+import { AntDesign } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { Pressable, Text, View } from 'react-native';
 
 import { useCategoriesStore } from '@/features/categories/store/categories.store';
+import { iconForCategory } from '@/shared/lib/categoryIcon';
 import { formatBRL } from '@/shared/lib/money';
 
 import type { Transaction } from '../types';
@@ -13,6 +15,8 @@ export function TransactionListItem({ tx }: Props) {
   const isIncome = tx.kind === 'income';
   const sign = isIncome ? '+' : '−';
   const color = isIncome ? '#22C55E' : '#EF4444';
+  const iconColor = category?.color ?? (isIncome ? '#22C55E' : '#EF4444');
+  const iconName = iconForCategory(category?.name, tx.kind);
 
   return (
     <Pressable
@@ -21,11 +25,9 @@ export function TransactionListItem({ tx }: Props) {
     >
       <View
         className="w-10 h-10 rounded-full items-center justify-center"
-        style={{ backgroundColor: (category?.color ?? '#334155') + '33' }}
+        style={{ backgroundColor: iconColor + '33' }}
       >
-        <Text className="text-base font-bold" style={{ color: category?.color ?? '#94A3B8' }}>
-          {(category?.name ?? '?').slice(0, 1)}
-        </Text>
+        <AntDesign name={iconName} size={18} color={iconColor} />
       </View>
       <View className="ml-3 flex-1">
         <Text className="text-white text-base font-semibold">

@@ -1,6 +1,13 @@
 import { router, Stack } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
-import { Alert, ScrollView, Text, View } from 'react-native';
+import {
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  Text,
+  View,
+} from 'react-native';
 
 import { CategoryChips } from '@/features/categories/components/CategoryChips';
 import { useCategoriesStore } from '@/features/categories/store/categories.store';
@@ -72,70 +79,77 @@ export default function NewTransaction() {
     <>
       <Stack.Screen options={{ title: 'Novo lançamento', presentation: 'modal' }} />
       <Screen>
-        <ScrollView
-          keyboardShouldPersistTaps="handled"
-          contentContainerStyle={{ paddingTop: 16, paddingBottom: 96, gap: 16 }}
+        <KeyboardAvoidingView
+          style={{ flex: 1 }}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          keyboardVerticalOffset={Platform.OS === 'ios' ? 40 : 0}
         >
-          <KindToggle value={kind} onChange={setKind} />
+          <ScrollView
+            keyboardShouldPersistTaps="handled"
+            keyboardDismissMode="interactive"
+            contentContainerStyle={{ paddingTop: 16, paddingBottom: 32, gap: 16 }}
+            showsVerticalScrollIndicator={false}
+          >
+            <KindToggle value={kind} onChange={setKind} />
 
-          <MoneyInput
-            valueCents={amountCents}
-            onChange={setAmountCents}
-            label="Valor"
-            tint={kind === 'income' ? '#22C55E' : '#EF4444'}
-          />
-
-          <View>
-            <Text className="text-muted mb-2 text-sm font-medium">Categoria</Text>
-            <CategoryChips
-              categories={categories}
-              selectedId={categoryId}
-              onSelect={setCategoryId}
+            <MoneyInput
+              valueCents={amountCents}
+              onChange={setAmountCents}
+              label="Valor"
+              tint={kind === 'income' ? '#22C55E' : '#EF4444'}
             />
-          </View>
 
-          <Input
-            label="Descrição (opcional)"
-            placeholder="Ex.: frete SP → BH"
-            value={description}
-            onChangeText={setDescription}
-          />
-
-          {isFuel ? (
-            <View className="gap-4">
-              <Input
-                label="Litros"
-                placeholder="0,00"
-                value={liters}
-                onChangeText={setLiters}
-                keyboardType="decimal-pad"
-              />
-              <Input
-                label="Preço por litro (R$)"
-                placeholder="0,00"
-                value={pricePerLiter}
-                onChangeText={setPricePerLiter}
-                keyboardType="decimal-pad"
-              />
-              <Input
-                label="Odômetro (km)"
-                placeholder="0"
-                value={odometer}
-                onChangeText={setOdometer}
-                keyboardType="decimal-pad"
+            <View>
+              <Text className="text-muted mb-2 text-sm font-medium">Categoria</Text>
+              <CategoryChips
+                categories={categories}
+                selectedId={categoryId}
+                onSelect={setCategoryId}
               />
             </View>
-          ) : null}
-        </ScrollView>
 
-        <View className="absolute bottom-4 left-5 right-5">
-          <Button
-            label="Salvar"
-            onPress={handleSave}
-            disabled={!canSave}
-            loading={saving}
-          />
-        </View>
+            <Input
+              label="Descrição (opcional)"
+              placeholder="Ex.: frete SP → BH"
+              value={description}
+              onChangeText={setDescription}
+            />
+
+            {isFuel ? (
+              <View className="gap-4">
+                <Input
+                  label="Litros"
+                  placeholder="0,00"
+                  value={liters}
+                  onChangeText={setLiters}
+                  keyboardType="decimal-pad"
+                />
+                <Input
+                  label="Preço por litro (R$)"
+                  placeholder="0,00"
+                  value={pricePerLiter}
+                  onChangeText={setPricePerLiter}
+                  keyboardType="decimal-pad"
+                />
+                <Input
+                  label="Odômetro (km)"
+                  placeholder="0"
+                  value={odometer}
+                  onChangeText={setOdometer}
+                  keyboardType="decimal-pad"
+                />
+              </View>
+            ) : null}
+
+            <Button
+              label="Salvar"
+              onPress={handleSave}
+              disabled={!canSave}
+              loading={saving}
+              className="mt-4"
+            />
+          </ScrollView>
+        </KeyboardAvoidingView>
       </Screen>
     </>
   );
