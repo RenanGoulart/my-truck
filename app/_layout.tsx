@@ -7,6 +7,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { DbProvider } from '@/app-providers/DbProvider';
+import { StoresHydrator } from '@/app-providers/StoresHydrator';
 
 export default function RootLayout() {
   return (
@@ -14,13 +15,24 @@ export default function RootLayout() {
       <SafeAreaProvider>
         <StatusBar style="light" />
         <DbProvider>
-          <Stack
-            screenOptions={{
-              headerStyle: { backgroundColor: '#0B0F14' },
-              headerTintColor: '#FFC107',
-              contentStyle: { backgroundColor: '#0B0F14' },
-            }}
-          />
+          <StoresHydrator>
+            <Stack
+              screenOptions={{
+                headerStyle: { backgroundColor: '#0B0F14' },
+                headerTintColor: '#FFC107',
+                contentStyle: { backgroundColor: '#0B0F14' },
+              }}
+            >
+              <Stack.Screen name="index" options={{ headerShown: false }} />
+              <Stack.Screen name="onboarding" options={{ headerShown: false }} />
+              <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+              <Stack.Screen
+                name="transaction/new"
+                options={{ presentation: 'modal', title: 'Novo lançamento' }}
+              />
+              <Stack.Screen name="transaction/[id]" options={{ title: 'Editar' }} />
+            </Stack>
+          </StoresHydrator>
         </DbProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>
