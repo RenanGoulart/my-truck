@@ -21,6 +21,9 @@ export function TransactionListItem({ tx }: Props) {
   return (
     <Pressable
       onPress={() => router.push(`/transaction/${tx.id}`)}
+      accessibilityRole="button"
+      accessibilityLabel={`${isIncome ? 'Ganho' : 'Gasto'} ${category?.name ?? ''} ${formatBRL(tx.amountCents)}`}
+      accessibilityHint="Toque para editar"
       className="flex-row items-center bg-surface border border-border rounded-2xl px-4 py-3"
     >
       <View

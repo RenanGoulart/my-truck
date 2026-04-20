@@ -34,6 +34,9 @@ export function Button({
     <Pressable
       onPress={onPress}
       disabled={disabled || loading}
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      accessibilityState={{ disabled: !!(disabled || loading), busy: !!loading }}
       className={`${base} ${v.bg} ${disabled ? 'opacity-40' : ''} ${className ?? ''}`}
     >
       {loading ? (

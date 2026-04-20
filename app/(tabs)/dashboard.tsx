@@ -10,6 +10,7 @@ import { TransactionListItem } from '@/features/transactions/components/Transact
 import { transactionsRepo } from '@/features/transactions/repository/transactions.repository';
 import { useTransactionsStore } from '@/features/transactions/store/transactions.store';
 import { useTruckStore } from '@/features/truck/store/truck.store';
+import { EmptyState } from '@/shared/ui/EmptyState';
 import { Fab } from '@/shared/ui/Fab';
 import { Screen } from '@/shared/ui/Screen';
 
@@ -90,9 +91,11 @@ export default function Dashboard() {
             Últimas transações
           </Text>
           {recent.length === 0 ? (
-            <Text className="text-muted text-sm">
-              Nenhuma transação neste mês. Toque em + para criar.
-            </Text>
+            <EmptyState
+              icon="swap"
+              title="Sem lançamentos neste mês"
+              description="Registre ganhos e gastos pelo botão +."
+            />
           ) : (
             <View className="gap-2">
               {recent.map((tx) => (

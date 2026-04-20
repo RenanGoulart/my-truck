@@ -1,12 +1,14 @@
 import { FlashList } from '@shopify/flash-list';
 import { router } from 'expo-router';
 import { useEffect } from 'react';
-import { Text, View } from 'react-native';
+import { View } from 'react-native';
 
 import { TransactionListItem } from '@/features/transactions/components/TransactionListItem';
 import { useTransactionsStore } from '@/features/transactions/store/transactions.store';
+import { EmptyState } from '@/shared/ui/EmptyState';
 import { Fab } from '@/shared/ui/Fab';
 import { Screen } from '@/shared/ui/Screen';
+import { Skeleton } from '@/shared/ui/Skeleton';
 
 export default function Transactions() {
   const items = useTransactionsStore((s) => s.items);
@@ -21,11 +23,19 @@ export default function Transactions() {
   return (
     <Screen padded={false}>
       <View className="flex-1 px-5 pt-4">
-        {items.length === 0 && !isLoading ? (
+        {isLoading && items.length === 0 ? (
+          <View className="gap-2">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <Skeleton key={i} height={64} rounded="lg" />
+            ))}
+          </View>
+        ) : items.length === 0 ? (
           <View className="flex-1 items-center justify-center">
-            <Text className="text-muted text-center">
-              Nenhuma transação neste mês.{'\n'}Toque em + para criar.
-            </Text>
+            <EmptyState
+              icon="swap"
+              title="Nenhuma transação neste mês"
+              description="Toque em + para registrar o primeiro lançamento."
+            />
           </View>
         ) : (
           <FlashList

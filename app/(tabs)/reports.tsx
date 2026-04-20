@@ -13,6 +13,7 @@ import { transactionsRepo } from '@/features/transactions/repository/transaction
 import { useTransactionsStore } from '@/features/transactions/store/transactions.store';
 import type { Transaction } from '@/features/transactions/types';
 import { Card } from '@/shared/ui/Card';
+import { EmptyState } from '@/shared/ui/EmptyState';
 import { Screen } from '@/shared/ui/Screen';
 
 export default function Reports() {
@@ -60,9 +61,11 @@ export default function Reports() {
             Gastos por categoria (mês)
           </Text>
           {slices.length === 0 ? (
-            <Text className="text-muted text-sm">
-              Nenhum gasto registrado neste mês.
-            </Text>
+            <EmptyState
+              icon="pie-chart"
+              title="Sem gastos no mês"
+              description="Registre gastos para ver a distribuição por categoria."
+            />
           ) : (
             <CategoryDonutChart slices={slices} />
           )}
