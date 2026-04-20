@@ -31,7 +31,7 @@ export function FuelCard({ fuelCostCents, kmDriven, costPerKmCents }: Props) {
         <View className="flex-1">
           <Text className="text-muted text-xs">Rodado</Text>
           <Text className="text-white text-lg font-bold">
-            {kmDriven ? `${kmDriven.toLocaleString('pt-BR')} km` : '—'}
+            {kmDriven !== null ? `${kmDriven.toLocaleString('pt-BR')} km` : '—'}
           </Text>
         </View>
         <View className="flex-1">

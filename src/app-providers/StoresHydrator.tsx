@@ -12,7 +12,9 @@ export function StoresHydrator({ children }: Props) {
   const setTruck = useTransactionsStore((s) => s.setTruck);
 
   useEffect(() => {
-    void hydrateCategories();
+    hydrateCategories().catch((e) => {
+      console.warn('hydrateCategories failed', e);
+    });
   }, [hydrateCategories]);
 
   useEffect(() => {

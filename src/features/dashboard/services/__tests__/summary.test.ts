@@ -77,6 +77,19 @@ describe('buildSummary', () => {
     expect(s.kmDriven).toBe(100);
   });
 
+  test('aceita odômetro 0 quando caminhão é novo', () => {
+    const s = buildSummary({
+      txs: [tx({ categoryId: fuel.id, amountCents: 5_000, odometer: 10 })],
+      categories: [fuel],
+      incomeCents: 0,
+      expenseCents: 5_000,
+      initialOdometer: 0,
+      baselineOdometer: 0,
+    });
+    expect(s.kmDriven).toBe(10);
+    expect(s.costPerKmCents).toBe(Math.round(5_000 / 10));
+  });
+
   test('km é null quando odômetro não supera o baseline', () => {
     const s = buildSummary({
       txs: [tx({ categoryId: fuel.id, amountCents: 10_000, odometer: 50 })],

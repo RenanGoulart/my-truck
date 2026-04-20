@@ -36,7 +36,7 @@ export default function Dashboard() {
       const baseline = await transactionsRepo.lastOdometerBefore(truckId, period.from);
       setBaselineOdometer(baseline);
     })();
-  }, [truckId, period.from, items]);
+  }, [truckId, period.from]);
 
   const summary = useMemo(
     () =>

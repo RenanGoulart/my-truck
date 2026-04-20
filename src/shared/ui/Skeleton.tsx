@@ -31,6 +31,8 @@ export function Skeleton({ height = 16, width = '100%', className, rounded = 'md
 
   return (
     <Animated.View
+      accessibilityRole="progressbar"
+      accessibilityLabel="Carregando"
       style={{ height, width, opacity }}
       className={`bg-surface ${radius[rounded]} ${className ?? ''}`}
     />

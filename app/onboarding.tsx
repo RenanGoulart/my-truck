@@ -68,7 +68,7 @@ export default function Onboarding() {
           placeholder="0"
           value={odometer}
           onChangeText={setOdometer}
-          keyboardType="numeric"
+          keyboardType="decimal-pad"
         />
       </View>
 

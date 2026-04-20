@@ -40,7 +40,7 @@ export const buildSummary = ({
 
   const odometersInPeriod = fuelTxs
     .map((t) => t.odometer)
-    .filter((o): o is number => typeof o === 'number' && o > 0);
+    .filter((o): o is number => typeof o === 'number' && o >= 0);
 
   const latestInPeriod =
     odometersInPeriod.length > 0
