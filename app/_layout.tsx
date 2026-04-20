@@ -31,6 +31,7 @@ export default function RootLayout() {
                 options={{ presentation: 'modal', title: 'Novo lançamento' }}
               />
               <Stack.Screen name="transaction/[id]" options={{ title: 'Editar' }} />
+              <Stack.Screen name="settings/categories" options={{ title: 'Categorias' }} />
             </Stack>
           </StoresHydrator>
         </DbProvider>

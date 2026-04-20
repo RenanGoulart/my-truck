@@ -1,5 +1,6 @@
 import { AntDesign } from '@expo/vector-icons';
-import { Tabs } from 'expo-router';
+import { router, Tabs } from 'expo-router';
+import { Pressable } from 'react-native';
 
 type IconName = React.ComponentProps<typeof AntDesign>['name'];
 
@@ -25,7 +26,19 @@ export default function TabsLayout() {
     >
       <Tabs.Screen
         name="dashboard"
-        options={{ title: 'Dashboard', tabBarIcon: icon('home') }}
+        options={{
+          title: 'Dashboard',
+          tabBarIcon: icon('home'),
+          headerRight: () => (
+            <Pressable
+              onPress={() => router.push('/settings/categories')}
+              className="pr-4"
+              hitSlop={12}
+            >
+              <AntDesign name="setting" size={22} color="#FFC107" />
+            </Pressable>
+          ),
+        }}
       />
       <Tabs.Screen
         name="transactions"
