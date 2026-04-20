@@ -31,7 +31,7 @@ export default function TabsLayout() {
           tabBarIcon: icon('home'),
           headerRight: () => (
             <Pressable
-              onPress={() => router.push('/settings/categories')}
+              onPress={() => router.push('/settings' as never)}
               className="pr-4"
               hitSlop={12}
             >

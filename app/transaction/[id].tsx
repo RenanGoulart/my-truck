@@ -16,6 +16,7 @@ import { KindToggle } from '@/features/transactions/components/KindToggle';
 import { transactionsRepo } from '@/features/transactions/repository/transactions.repository';
 import { useTransactionsStore } from '@/features/transactions/store/transactions.store';
 import type { Transaction, TransactionKind } from '@/features/transactions/types';
+import { fromCents } from '@/shared/lib/money';
 import { Button } from '@/shared/ui/Button';
 import { Input } from '@/shared/ui/Input';
 import { MoneyInput } from '@/shared/ui/MoneyInput';
@@ -32,6 +33,9 @@ export default function EditTransaction() {
   const [amountCents, setAmountCents] = useState(0);
   const [categoryId, setCategoryId] = useState<string | null>(null);
   const [description, setDescription] = useState('');
+  const [odometer, setOdometer] = useState('');
+  const [liters, setLiters] = useState('');
+  const [pricePerLiter, setPricePerLiter] = useState('');
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -48,6 +52,13 @@ export default function EditTransaction() {
       setAmountCents(found.amountCents);
       setCategoryId(found.categoryId);
       setDescription(found.description ?? '');
+      setOdometer(found.odometer !== undefined ? String(found.odometer) : '');
+      setLiters(found.liters !== undefined ? String(found.liters) : '');
+      setPricePerLiter(
+        found.pricePerLiterCents !== undefined
+          ? String(fromCents(found.pricePerLiterCents))
+          : ''
+      );
     })();
   }, [id]);
 
@@ -63,10 +74,23 @@ export default function EditTransaction() {
     );
   }
 
+  const selectedCategory = categories.find((c) => c.id === categoryId);
+  const isFuel =
+    kind === 'expense' && selectedCategory?.name.toLowerCase() === 'combustível';
+
   const canSave = amountCents > 0 && !!categoryId && !saving;
 
   const handleSave = async () => {
     if (!canSave) return;
+    const odo = odometer ? Number(odometer.replace(',', '.')) : undefined;
+    const lit = liters ? Number(liters.replace(',', '.')) : undefined;
+    const ppl = pricePerLiter ? Number(pricePerLiter.replace(',', '.')) : undefined;
+
+    if ([odo, lit, ppl].some((n) => n !== undefined && Number.isNaN(n))) {
+      Alert.alert('Número inválido', 'Revise os campos numéricos.');
+      return;
+    }
+
     setSaving(true);
     try {
       await update(tx.id, {
@@ -74,6 +98,10 @@ export default function EditTransaction() {
         amountCents,
         categoryId: categoryId!,
         description: description.trim() || undefined,
+        odometer: isFuel ? odo : undefined,
+        liters: isFuel ? lit : undefined,
+        pricePerLiterCents:
+          isFuel && ppl !== undefined ? Math.round(ppl * 100) : undefined,
       });
       router.back();
     } catch (e) {
@@ -133,6 +161,33 @@ export default function EditTransaction() {
               onChangeText={setDescription}
               placeholder="Opcional"
             />
+
+            {isFuel ? (
+              <View className="gap-4">
+                <Input
+                  label="Litros"
+                  placeholder="0,00"
+                  value={liters}
+                  onChangeText={setLiters}
+                  keyboardType="decimal-pad"
+                />
+                <Input
+                  label="Preço por litro (R$)"
+                  placeholder="0,00"
+                  value={pricePerLiter}
+                  onChangeText={setPricePerLiter}
+                  keyboardType="decimal-pad"
+                />
+                <Input
+                  label="Odômetro (km)"
+                  placeholder="0"
+                  value={odometer}
+                  onChangeText={setOdometer}
+                  keyboardType="decimal-pad"
+                />
+              </View>
+            ) : null}
+
             <View className="gap-3 mt-4">
               <Button
                 label="Salvar alterações"

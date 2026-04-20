@@ -13,12 +13,23 @@ export type DashboardSummary = {
 const isFuel = (category: Category | undefined): boolean =>
   category?.name.toLowerCase().trim() === 'combustível';
 
-export const buildSummary = (
-  txs: Transaction[],
-  categories: Category[],
-  incomeCents: number,
-  expenseCents: number
-): DashboardSummary => {
+type Input = {
+  txs: Transaction[];
+  categories: Category[];
+  incomeCents: number;
+  expenseCents: number;
+  initialOdometer: number;
+  baselineOdometer: number | null;
+};
+
+export const buildSummary = ({
+  txs,
+  categories,
+  incomeCents,
+  expenseCents,
+  initialOdometer,
+  baselineOdometer,
+}: Input): DashboardSummary => {
   const byId = new Map(categories.map((c) => [c.id, c]));
 
   const fuelTxs = txs
@@ -27,12 +38,21 @@ export const buildSummary = (
 
   const fuelCostCents = fuelTxs.reduce((sum, t) => sum + t.amountCents, 0);
 
-  const odometers = fuelTxs
+  const odometersInPeriod = fuelTxs
     .map((t) => t.odometer)
     .filter((o): o is number => typeof o === 'number' && o > 0);
 
+  const latestInPeriod =
+    odometersInPeriod.length > 0
+      ? Math.max(...odometersInPeriod)
+      : null;
+
+  const baseline = baselineOdometer ?? initialOdometer;
+
   const kmDriven =
-    odometers.length >= 2 ? odometers[odometers.length - 1] - odometers[0] : null;
+    latestInPeriod !== null && latestInPeriod > baseline
+      ? latestInPeriod - baseline
+      : null;
 
   const costPerKmCents =
     kmDriven && kmDriven > 0 ? Math.round(fuelCostCents / kmDriven) : null;

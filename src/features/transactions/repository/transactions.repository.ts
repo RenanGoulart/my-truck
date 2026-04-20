@@ -118,6 +118,19 @@ export const transactionsRepo = {
     return rows.map(rowToTx);
   },
 
+  async lastOdometerBefore(truckId: string, beforeEpoch: number): Promise<number | null> {
+    const db = await getDb();
+    const row = await db.getFirstAsync<{ odometer: number | null }>(
+      `SELECT odometer FROM transactions
+       WHERE truck_id = ? AND deleted_at IS NULL
+         AND occurred_at < ? AND odometer IS NOT NULL
+       ORDER BY occurred_at DESC, created_at DESC
+       LIMIT 1`,
+      [truckId, beforeEpoch]
+    );
+    return row?.odometer ?? null;
+  },
+
   async sumByKind(
     truckId: string,
     { from, to }: Period

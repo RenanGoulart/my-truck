@@ -1,5 +1,5 @@
 import { router } from 'expo-router';
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { ScrollView, Text, View } from 'react-native';
 
 import { useCategoriesStore } from '@/features/categories/store/categories.store';
@@ -7,6 +7,7 @@ import { BalanceCard } from '@/features/dashboard/components/BalanceCard';
 import { FuelCard } from '@/features/dashboard/components/FuelCard';
 import { buildSummary } from '@/features/dashboard/services/summary';
 import { TransactionListItem } from '@/features/transactions/components/TransactionListItem';
+import { transactionsRepo } from '@/features/transactions/repository/transactions.repository';
 import { useTransactionsStore } from '@/features/transactions/store/transactions.store';
 import { useTruckStore } from '@/features/truck/store/truck.store';
 import { Fab } from '@/shared/ui/Fab';
@@ -18,16 +19,35 @@ export default function Dashboard() {
   const incomeCents = useTransactionsStore((s) => s.incomeCents);
   const expenseCents = useTransactionsStore((s) => s.expenseCents);
   const truckId = useTransactionsStore((s) => s.truckId);
+  const period = useTransactionsStore((s) => s.period);
   const load = useTransactionsStore((s) => s.load);
   const categories = useCategoriesStore((s) => s.items);
+
+  const [baselineOdometer, setBaselineOdometer] = useState<number | null>(null);
 
   useEffect(() => {
     if (truckId) void load();
   }, [truckId, load]);
 
+  useEffect(() => {
+    (async () => {
+      if (!truckId) return;
+      const baseline = await transactionsRepo.lastOdometerBefore(truckId, period.from);
+      setBaselineOdometer(baseline);
+    })();
+  }, [truckId, period.from, items]);
+
   const summary = useMemo(
-    () => buildSummary(items, categories, incomeCents, expenseCents),
-    [items, categories, incomeCents, expenseCents]
+    () =>
+      buildSummary({
+        txs: items,
+        categories,
+        incomeCents,
+        expenseCents,
+        initialOdometer: truck?.initialOdometer ?? 0,
+        baselineOdometer,
+      }),
+    [items, categories, incomeCents, expenseCents, truck?.initialOdometer, baselineOdometer]
   );
 
   const recent = items.slice(0, 5);
