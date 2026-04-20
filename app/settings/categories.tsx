@@ -1,6 +1,8 @@
 import { AntDesign } from '@expo/vector-icons';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { Stack } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
+import { Controller, useForm } from 'react-hook-form';
 import {
   Alert,
   KeyboardAvoidingView,
@@ -12,8 +14,12 @@ import {
 } from 'react-native';
 
 import { useCategoriesStore } from '@/features/categories/store/categories.store';
-import type { Category, CategoryKind } from '@/features/categories/types';
+import type { Category } from '@/features/categories/types';
 import { iconForCategory } from '@/shared/lib/categoryIcon';
+import {
+  categoryFormSchema,
+  type CategoryFormValues,
+} from '@/shared/lib/forms/schemas';
 import { Button } from '@/shared/ui/Button';
 import { Input } from '@/shared/ui/Input';
 import { Screen } from '@/shared/ui/Screen';
@@ -38,27 +44,27 @@ export default function CategoriesSettings() {
   const create = useCategoriesStore((s) => s.create);
   const remove = useCategoriesStore((s) => s.remove);
 
-  const [name, setName] = useState('');
-  const [kind, setKind] = useState<CategoryKind>('expense');
-  const [color, setColor] = useState(COLORS[0]);
-  const [saving, setSaving] = useState(false);
+  const {
+    control,
+    handleSubmit,
+    reset,
+    formState: { errors, isSubmitting },
+  } = useForm<CategoryFormValues>({
+    resolver: zodResolver(categoryFormSchema),
+    defaultValues: { name: '', kind: 'expense', color: COLORS[0] },
+    mode: 'onTouched',
+  });
 
   useEffect(() => {
     if (!hydrated) void hydrate();
   }, [hydrated, hydrate]);
 
-  const canSave = name.trim().length > 0 && !saving;
-
-  const handleCreate = async () => {
-    if (!canSave) return;
-    setSaving(true);
+  const onSubmit = async (values: CategoryFormValues) => {
     try {
-      await create({ name: name.trim(), kind, color });
-      setName('');
+      await create({ name: values.name.trim(), kind: values.kind, color: values.color });
+      reset({ name: '', kind: values.kind, color: values.color });
     } catch (e) {
       Alert.alert('Erro', (e as Error).message);
-    } finally {
-      setSaving(false);
     }
   };
 
@@ -96,50 +102,75 @@ export default function CategoriesSettings() {
                 Nova categoria
               </Text>
 
-              <View className="flex-row gap-2">
-                <KindChip
-                  label="Gasto"
-                  active={kind === 'expense'}
-                  onPress={() => setKind('expense')}
-                  activeColor="#EF4444"
-                />
-                <KindChip
-                  label="Ganho"
-                  active={kind === 'income'}
-                  onPress={() => setKind('income')}
-                  activeColor="#22C55E"
-                />
-              </View>
-
-              <Input
-                label="Nome"
-                placeholder="Ex.: Estacionamento"
-                value={name}
-                onChangeText={setName}
-                autoCapitalize="sentences"
+              <Controller
+                control={control}
+                name="kind"
+                render={({ field: { value, onChange } }) => (
+                  <View className="flex-row gap-2">
+                    <KindChip
+                      label="Gasto"
+                      active={value === 'expense'}
+                      onPress={() => onChange('expense')}
+                      activeColor="#EF4444"
+                    />
+                    <KindChip
+                      label="Ganho"
+                      active={value === 'income'}
+                      onPress={() => onChange('income')}
+                      activeColor="#22C55E"
+                    />
+                  </View>
+                )}
               />
 
-              <View>
-                <Text className="text-muted mb-2 text-sm font-medium">Cor</Text>
-                <View className="flex-row flex-wrap gap-2">
-                  {COLORS.map((c) => (
-                    <Pressable
-                      key={c}
-                      onPress={() => setColor(c)}
-                      className={`w-9 h-9 rounded-full items-center justify-center border-2 ${
-                        color === c ? 'border-white' : 'border-transparent'
-                      }`}
-                      style={{ backgroundColor: c }}
-                    >
-                      {color === c ? (
-                        <AntDesign name="check" size={16} color="#0B0F14" />
-                      ) : null}
-                    </Pressable>
-                  ))}
-                </View>
-              </View>
+              <Controller
+                control={control}
+                name="name"
+                render={({ field: { value, onChange, onBlur } }) => (
+                  <Input
+                    label="Nome"
+                    placeholder="Ex.: Estacionamento"
+                    value={value}
+                    onChangeText={onChange}
+                    onBlur={onBlur}
+                    autoCapitalize="sentences"
+                    error={errors.name?.message}
+                  />
+                )}
+              />
 
-              <Button label="Adicionar" onPress={handleCreate} disabled={!canSave} loading={saving} />
+              <Controller
+                control={control}
+                name="color"
+                render={({ field: { value, onChange } }) => (
+                  <View>
+                    <Text className="text-muted mb-2 text-sm font-medium">Cor</Text>
+                    <View className="flex-row flex-wrap gap-2">
+                      {COLORS.map((c) => (
+                        <Pressable
+                          key={c}
+                          onPress={() => onChange(c)}
+                          className={`w-9 h-9 rounded-full items-center justify-center border-2 ${
+                            value === c ? 'border-white' : 'border-transparent'
+                          }`}
+                          style={{ backgroundColor: c }}
+                        >
+                          {value === c ? (
+                            <AntDesign name="check" size={16} color="#0B0F14" />
+                          ) : null}
+                        </Pressable>
+                      ))}
+                    </View>
+                  </View>
+                )}
+              />
+
+              <Button
+                label="Adicionar"
+                onPress={handleSubmit(onSubmit)}
+                disabled={isSubmitting}
+                loading={isSubmitting}
+              />
             </View>
 
             <Section title="Ganhos" list={income} onDelete={handleDelete} />

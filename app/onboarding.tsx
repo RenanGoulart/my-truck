@@ -1,39 +1,42 @@
+import { zodResolver } from '@hookform/resolvers/zod';
 import { router } from 'expo-router';
-import { useState } from 'react';
+import { Controller, useForm } from 'react-hook-form';
 import { Alert, Text, View } from 'react-native';
 
 import { useTruckStore } from '@/features/truck/store/truck.store';
+import {
+  parseDecimal,
+  truckFormSchema,
+  type TruckFormValues,
+} from '@/shared/lib/forms/schemas';
 import { Button } from '@/shared/ui/Button';
 import { Input } from '@/shared/ui/Input';
 import { Screen } from '@/shared/ui/Screen';
 
 export default function Onboarding() {
   const createTruck = useTruckStore((s) => s.create);
-  const [nickname, setNickname] = useState('');
-  const [plate, setPlate] = useState('');
-  const [odometer, setOdometer] = useState('');
-  const [saving, setSaving] = useState(false);
 
-  const canSave = nickname.trim().length > 0 && !saving;
+  const {
+    control,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<TruckFormValues>({
+    resolver: zodResolver(truckFormSchema),
+    defaultValues: { nickname: '', plate: '', odometer: '' },
+    mode: 'onTouched',
+  });
 
-  const handleSave = async () => {
-    const km = Number(odometer.replace(',', '.'));
-    if (odometer && Number.isNaN(km)) {
-      Alert.alert('Odômetro inválido', 'Informe um número válido.');
-      return;
-    }
-    setSaving(true);
+  const onSubmit = async (values: TruckFormValues) => {
     try {
+      const km = parseDecimal(values.odometer);
       await createTruck({
-        nickname: nickname.trim(),
-        plate: plate.trim() || undefined,
-        initialOdometer: Number.isFinite(km) ? km : 0,
+        nickname: values.nickname.trim(),
+        plate: values.plate.trim() || undefined,
+        initialOdometer: km ?? 0,
       });
       router.replace('/(tabs)/dashboard');
     } catch (e) {
       Alert.alert('Erro', (e as Error).message);
-    } finally {
-      setSaving(false);
     }
   };
 
@@ -47,37 +50,61 @@ export default function Onboarding() {
       </View>
 
       <View className="mt-8 gap-4">
-        <Input
-          label="Apelido do caminhão"
-          placeholder="Ex.: Scania Verde"
-          value={nickname}
-          onChangeText={setNickname}
-          autoCapitalize="words"
-          returnKeyType="next"
+        <Controller
+          control={control}
+          name="nickname"
+          render={({ field: { value, onChange, onBlur } }) => (
+            <Input
+              label="Apelido do caminhão"
+              placeholder="Ex.: Scania Verde"
+              value={value}
+              onChangeText={onChange}
+              onBlur={onBlur}
+              autoCapitalize="words"
+              returnKeyType="next"
+              error={errors.nickname?.message}
+            />
+          )}
         />
-        <Input
-          label="Placa (opcional)"
-          placeholder="AAA-0A00"
-          value={plate}
-          onChangeText={(t) => setPlate(t.toUpperCase())}
-          autoCapitalize="characters"
-          maxLength={8}
+        <Controller
+          control={control}
+          name="plate"
+          render={({ field: { value, onChange, onBlur } }) => (
+            <Input
+              label="Placa (opcional)"
+              placeholder="AAA-0A00"
+              value={value}
+              onChangeText={(t) => onChange(t.toUpperCase())}
+              onBlur={onBlur}
+              autoCapitalize="characters"
+              maxLength={8}
+              error={errors.plate?.message}
+            />
+          )}
         />
-        <Input
-          label="Odômetro inicial (km)"
-          placeholder="0"
-          value={odometer}
-          onChangeText={setOdometer}
-          keyboardType="decimal-pad"
+        <Controller
+          control={control}
+          name="odometer"
+          render={({ field: { value, onChange, onBlur } }) => (
+            <Input
+              label="Odômetro inicial (km)"
+              placeholder="0"
+              value={value}
+              onChangeText={onChange}
+              onBlur={onBlur}
+              keyboardType="decimal-pad"
+              error={errors.odometer?.message}
+            />
+          )}
         />
       </View>
 
       <View className="mt-auto mb-4">
         <Button
           label="Salvar caminhão"
-          onPress={handleSave}
-          disabled={!canSave}
-          loading={saving}
+          onPress={handleSubmit(onSubmit)}
+          disabled={isSubmitting}
+          loading={isSubmitting}
         />
       </View>
     </Screen>

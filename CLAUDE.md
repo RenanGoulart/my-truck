@@ -29,11 +29,20 @@ App Expo Router (React Native + NativeWind) com persistência local em SQLite (`
   - `store/` — Zustand store que orquestra o repositório e expõe ações para a UI. Stores dependem de `truckId` ser setado antes de `load()`.
   - `services/` — lógica pura (agregações, cálculos) usada por dashboard/reports. Devem ser puras e unit-testáveis sem banco.
   - `components/` — UI específica da feature.
-- `src/shared/` — `ui/` (componentes reusáveis), `lib/` (helpers puros: datas, moeda, etc.), `hooks/`, `theme/`.
+- `src/shared/` — `ui/` (componentes reusáveis), `lib/` (helpers puros: datas, moeda, schemas de formulário em `lib/forms/`), `hooks/`, `theme/`.
 
 ### Fluxo de dados
 
 UI → store (Zustand) → repository (SQL) → SQLite. Totais e derivações ficam no store (ex.: `incomeCents`/`expenseCents` em `transactions.store`) ou em `services/` puros quando reaproveitados entre telas. Valores monetários são armazenados e manipulados em **centavos** (inteiros).
+
+### Formulários
+
+- Todos os formulários usam **react-hook-form** + **zod** (via `@hookform/resolvers/zod`).
+- Schemas compartilhados ficam em `src/shared/lib/forms/schemas.ts` (um schema por domínio: `truckFormSchema`, `transactionFormSchema`, `categoryFormSchema`).
+- Componentes de UI do RN são integrados via `Controller` (inputs não-nativos como `MoneyInput`, `KindToggle`, `CategoryChips` e seletores de cor também são envolvidos em `Controller`).
+- Campos numéricos com vírgula/ponto ficam como `string` no form e são convertidos via `parseDecimal()` dentro de `onSubmit`.
+- Estado de submissão usa `formState.isSubmitting` em vez de `useState` local; erros de validação ficam em `formState.errors` e são passados via prop `error` para `Input`.
+- Para telas de edição, carregar os dados e chamar `reset(valuesIniciais)` dentro de um `useEffect`.
 
 ### Convenções
 
@@ -41,3 +50,4 @@ UI → store (Zustand) → repository (SQL) → SQLite. Totais e derivações fi
 - Estilização via NativeWind/Tailwind (`global.css`, `tailwind.config.js`).
 - Novos campos persistidos exigem nova migração em `src/db/migrations/` (não editar as existentes).
 - Ao adicionar uma feature, siga a estrutura `types` / `repository` / `store` / `components` e registre hidratação em `StoresHydrator` se precisar carregar no boot.
+- Ao adicionar um novo formulário, crie/estenda o schema zod em `src/shared/lib/forms/schemas.ts` antes de escrever a UI.

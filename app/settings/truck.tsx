@@ -1,15 +1,21 @@
+import { zodResolver } from '@hookform/resolvers/zod';
 import { router, Stack } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
+import { Controller, useForm } from 'react-hook-form';
 import {
   Alert,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
   Text,
-  View,
 } from 'react-native';
 
 import { useTruckStore } from '@/features/truck/store/truck.store';
+import {
+  parseDecimal,
+  truckFormSchema,
+  type TruckFormValues,
+} from '@/shared/lib/forms/schemas';
 import { Button } from '@/shared/ui/Button';
 import { Input } from '@/shared/ui/Input';
 import { Screen } from '@/shared/ui/Screen';
@@ -18,40 +24,38 @@ export default function EditTruck() {
   const truck = useTruckStore((s) => s.truck);
   const update = useTruckStore((s) => s.update);
 
-  const [nickname, setNickname] = useState('');
-  const [plate, setPlate] = useState('');
-  const [odometer, setOdometer] = useState('');
-  const [saving, setSaving] = useState(false);
+  const {
+    control,
+    handleSubmit,
+    reset,
+    formState: { errors, isSubmitting },
+  } = useForm<TruckFormValues>({
+    resolver: zodResolver(truckFormSchema),
+    defaultValues: { nickname: '', plate: '', odometer: '' },
+    mode: 'onTouched',
+  });
 
   useEffect(() => {
     if (truck) {
-      setNickname(truck.nickname);
-      setPlate(truck.plate ?? '');
-      setOdometer(String(truck.initialOdometer));
+      reset({
+        nickname: truck.nickname,
+        plate: truck.plate ?? '',
+        odometer: String(truck.initialOdometer),
+      });
     }
-  }, [truck]);
+  }, [truck, reset]);
 
-  const canSave = nickname.trim().length > 0 && !saving;
-
-  const handleSave = async () => {
-    if (!canSave) return;
-    const km = Number(odometer.replace(',', '.'));
-    if (odometer && Number.isNaN(km)) {
-      Alert.alert('Odômetro inválido', 'Informe um número válido.');
-      return;
-    }
-    setSaving(true);
+  const onSubmit = async (values: TruckFormValues) => {
     try {
+      const km = parseDecimal(values.odometer);
       await update({
-        nickname: nickname.trim(),
-        plate: plate.trim() || undefined,
-        initialOdometer: Number.isFinite(km) ? km : 0,
+        nickname: values.nickname.trim(),
+        plate: values.plate.trim() || undefined,
+        initialOdometer: km ?? 0,
       });
       router.back();
     } catch (e) {
       Alert.alert('Erro', (e as Error).message);
-    } finally {
-      setSaving(false);
     }
   };
 
@@ -74,34 +78,58 @@ export default function EditTruck() {
               quilometragem rodada quando não houver abastecimentos anteriores.
             </Text>
 
-            <Input
-              label="Apelido"
-              placeholder="Ex.: Scania Verde"
-              value={nickname}
-              onChangeText={setNickname}
-              autoCapitalize="words"
+            <Controller
+              control={control}
+              name="nickname"
+              render={({ field: { value, onChange, onBlur } }) => (
+                <Input
+                  label="Apelido"
+                  placeholder="Ex.: Scania Verde"
+                  value={value}
+                  onChangeText={onChange}
+                  onBlur={onBlur}
+                  autoCapitalize="words"
+                  error={errors.nickname?.message}
+                />
+              )}
             />
-            <Input
-              label="Placa (opcional)"
-              placeholder="AAA-0A00"
-              value={plate}
-              onChangeText={(t) => setPlate(t.toUpperCase())}
-              autoCapitalize="characters"
-              maxLength={8}
+            <Controller
+              control={control}
+              name="plate"
+              render={({ field: { value, onChange, onBlur } }) => (
+                <Input
+                  label="Placa (opcional)"
+                  placeholder="AAA-0A00"
+                  value={value}
+                  onChangeText={(t) => onChange(t.toUpperCase())}
+                  onBlur={onBlur}
+                  autoCapitalize="characters"
+                  maxLength={8}
+                  error={errors.plate?.message}
+                />
+              )}
             />
-            <Input
-              label="Odômetro inicial (km)"
-              placeholder="0"
-              value={odometer}
-              onChangeText={setOdometer}
-              keyboardType="decimal-pad"
+            <Controller
+              control={control}
+              name="odometer"
+              render={({ field: { value, onChange, onBlur } }) => (
+                <Input
+                  label="Odômetro inicial (km)"
+                  placeholder="0"
+                  value={value}
+                  onChangeText={onChange}
+                  onBlur={onBlur}
+                  keyboardType="decimal-pad"
+                  error={errors.odometer?.message}
+                />
+              )}
             />
 
             <Button
               label="Salvar"
-              onPress={handleSave}
-              disabled={!canSave}
-              loading={saving}
+              onPress={handleSubmit(onSubmit)}
+              disabled={isSubmitting}
+              loading={isSubmitting}
               className="mt-4"
             />
           </ScrollView>
