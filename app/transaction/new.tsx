@@ -15,6 +15,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { CategoryChips } from '@/features/categories/components/CategoryChips';
 import { useCategoriesStore } from '@/features/categories/store/categories.store';
 import { KindToggle } from '@/features/transactions/components/KindToggle';
+import { transactionsRepo } from '@/features/transactions/repository/transactions.repository';
 import { useTransactionsStore } from '@/features/transactions/store/transactions.store';
 import {
   parseDecimal,
@@ -29,6 +30,7 @@ import { Screen } from '@/shared/ui/Screen';
 export default function NewTransaction() {
   const categoriesByKind = useCategoriesStore((s) => s.byKind);
   const add = useTransactionsStore((s) => s.add);
+  const truckId = useTransactionsStore((s) => s.truckId);
   const insets = useSafeAreaInsets();
 
   const {
@@ -36,6 +38,7 @@ export default function NewTransaction() {
     handleSubmit,
     watch,
     setValue,
+    getValues,
     formState: { errors, isSubmitting },
   } = useForm<TransactionFormValues>({
     resolver: zodResolver(transactionFormSchema),
@@ -53,6 +56,8 @@ export default function NewTransaction() {
 
   const kind = watch('kind');
   const categoryId = watch('categoryId');
+  const liters = watch('liters');
+  const pricePerLiter = watch('pricePerLiter');
 
   const categories = useMemo(() => categoriesByKind(kind), [categoriesByKind, kind]);
 
@@ -63,6 +68,30 @@ export default function NewTransaction() {
   const selectedCategory = categories.find((c) => c.id === categoryId);
   const isFuel =
     kind === 'expense' && selectedCategory?.name.toLowerCase() === 'combustível';
+
+  useEffect(() => {
+    if (!isFuel) return;
+    const l = parseDecimal(liters);
+    const p = parseDecimal(pricePerLiter);
+    if (l !== undefined && p !== undefined) {
+      setValue('amountCents', Math.round(l * p * 100), { shouldValidate: true });
+    }
+  }, [isFuel, liters, pricePerLiter, setValue]);
+
+  useEffect(() => {
+    if (!isFuel || !truckId) return;
+    let cancelled = false;
+    (async () => {
+      const last = await transactionsRepo.lastOdometerBefore(truckId, Date.now());
+      if (cancelled) return;
+      if (!getValues('odometer') && last !== null) {
+        setValue('odometer', String(last));
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [isFuel, truckId, setValue, getValues]);
 
   const onSubmit = async (values: TransactionFormValues) => {
     try {

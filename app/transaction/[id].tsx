@@ -34,6 +34,7 @@ export default function EditTransaction() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const update = useTransactionsStore((s) => s.update);
   const remove = useTransactionsStore((s) => s.remove);
+  const truckId = useTransactionsStore((s) => s.truckId);
   const categoriesByKind = useCategoriesStore((s) => s.byKind);
   const insets = useSafeAreaInsets();
 
@@ -44,6 +45,8 @@ export default function EditTransaction() {
     handleSubmit,
     reset,
     watch,
+    setValue,
+    getValues,
     formState: { errors, isSubmitting },
   } = useForm<TransactionFormValues>({
     resolver: zodResolver(transactionFormSchema),
@@ -61,6 +64,8 @@ export default function EditTransaction() {
 
   const kind = watch('kind');
   const categoryId = watch('categoryId');
+  const liters = watch('liters');
+  const pricePerLiter = watch('pricePerLiter');
 
   useEffect(() => {
     (async () => {
@@ -89,6 +94,37 @@ export default function EditTransaction() {
 
   const categories = useMemo(() => categoriesByKind(kind), [categoriesByKind, kind]);
 
+  const selectedCategory = categories.find((c) => c.id === categoryId);
+  const isFuel =
+    kind === 'expense' && selectedCategory?.name.toLowerCase() === 'combustível';
+
+  useEffect(() => {
+    if (!isFuel) return;
+    const l = parseDecimal(liters);
+    const p = parseDecimal(pricePerLiter);
+    if (l !== undefined && p !== undefined) {
+      setValue('amountCents', Math.round(l * p * 100), { shouldValidate: true });
+    }
+  }, [isFuel, liters, pricePerLiter, setValue]);
+
+  useEffect(() => {
+    if (!isFuel || !truckId || !tx) return;
+    let cancelled = false;
+    (async () => {
+      const last = await transactionsRepo.lastOdometerBefore(
+        truckId,
+        tx.occurredAt.getTime()
+      );
+      if (cancelled) return;
+      if (!getValues('odometer') && last !== null) {
+        setValue('odometer', String(last));
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [isFuel, truckId, tx, setValue, getValues]);
+
   if (!tx) {
     return (
       <Screen>
@@ -98,10 +134,6 @@ export default function EditTransaction() {
       </Screen>
     );
   }
-
-  const selectedCategory = categories.find((c) => c.id === categoryId);
-  const isFuel =
-    kind === 'expense' && selectedCategory?.name.toLowerCase() === 'combustível';
 
   const onSubmit = async (values: TransactionFormValues) => {
     try {
