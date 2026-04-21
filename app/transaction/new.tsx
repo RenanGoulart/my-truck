@@ -10,6 +10,7 @@ import {
   Text,
   View,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { CategoryChips } from '@/features/categories/components/CategoryChips';
 import { useCategoriesStore } from '@/features/categories/store/categories.store';
@@ -28,6 +29,7 @@ import { Screen } from '@/shared/ui/Screen';
 export default function NewTransaction() {
   const categoriesByKind = useCategoriesStore((s) => s.byKind);
   const add = useTransactionsStore((s) => s.add);
+  const insets = useSafeAreaInsets();
 
   const {
     control,
@@ -93,7 +95,11 @@ export default function NewTransaction() {
           <ScrollView
             keyboardShouldPersistTaps="handled"
             keyboardDismissMode="interactive"
-            contentContainerStyle={{ paddingTop: 16, paddingBottom: 32, gap: 16 }}
+            contentContainerStyle={{
+              paddingTop: 16,
+              paddingBottom: 32 + insets.bottom,
+              gap: 16,
+            }}
             showsVerticalScrollIndicator={false}
           >
             <Controller

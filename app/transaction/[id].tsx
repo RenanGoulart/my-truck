@@ -11,6 +11,7 @@ import {
   Text,
   View,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { CategoryChips } from '@/features/categories/components/CategoryChips';
 import { useCategoriesStore } from '@/features/categories/store/categories.store';
@@ -34,6 +35,7 @@ export default function EditTransaction() {
   const update = useTransactionsStore((s) => s.update);
   const remove = useTransactionsStore((s) => s.remove);
   const categoriesByKind = useCategoriesStore((s) => s.byKind);
+  const insets = useSafeAreaInsets();
 
   const [tx, setTx] = useState<Transaction | null>(null);
 
@@ -146,7 +148,11 @@ export default function EditTransaction() {
           <ScrollView
             keyboardShouldPersistTaps="handled"
             keyboardDismissMode="interactive"
-            contentContainerStyle={{ paddingTop: 16, paddingBottom: 32, gap: 16 }}
+            contentContainerStyle={{
+              paddingTop: 16,
+              paddingBottom: 32 + insets.bottom,
+              gap: 16,
+            }}
             showsVerticalScrollIndicator={false}
           >
             <Controller
