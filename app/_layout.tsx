@@ -8,8 +8,15 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { DbProvider } from '@/app-providers/DbProvider';
 import { StoresHydrator } from '@/app-providers/StoresHydrator';
+import useUpdate from '@/shared/hooks/useUpdate';
 
 export default function RootLayout() {
+  const isLoading = useUpdate();
+
+  if (isLoading) {
+    return null;
+  }
+
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
