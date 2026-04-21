@@ -1,5 +1,5 @@
 import { Text, View } from 'react-native';
-import Svg, { Circle, G } from 'react-native-svg';
+import { Pie, PolarChart } from 'victory-native';
 
 import { formatBRL } from '@/shared/lib/money';
 
@@ -10,47 +10,41 @@ type Props = {
   size?: number;
 };
 
-export function CategoryDonutChart({ slices, size = 200 }: Props) {
-  const stroke = 28;
-  const radius = (size - stroke) / 2;
-  const circumference = 2 * Math.PI * radius;
-  const total = slices.reduce((a, s) => a + s.totalCents, 0);
+const STROKE = 28;
+const TRACK_COLOR = '#1A2230';
 
-  let offset = 0;
+export function CategoryDonutChart({ slices, size = 200 }: Props) {
+  const total = slices.reduce((a, s) => a + s.totalCents, 0);
+  const innerRadiusPercent = `${((size - STROKE * 2) / size) * 100}%`;
+
+  const pieData = slices.map((s) => ({
+    value: s.totalCents,
+    color: s.color,
+    label: s.name,
+  }));
 
   return (
     <View className="flex-row items-center gap-4">
-      <Svg width={size} height={size}>
-        <G rotation={-90} originX={size / 2} originY={size / 2}>
-          <Circle
-            cx={size / 2}
-            cy={size / 2}
-            r={radius}
-            stroke="#1A2230"
-            strokeWidth={stroke}
-            fill="transparent"
-          />
-          {slices.map((s) => {
-            const length = s.percent * circumference;
-            const el = (
-              <Circle
-                key={s.categoryId}
-                cx={size / 2}
-                cy={size / 2}
-                r={radius}
-                stroke={s.color}
-                strokeWidth={stroke}
-                strokeDasharray={`${length} ${circumference - length}`}
-                strokeDashoffset={-offset}
-                fill="transparent"
-                strokeLinecap="butt"
-              />
-            );
-            offset += length;
-            return el;
-          })}
-        </G>
-      </Svg>
+      <View style={{ width: size, height: size }}>
+        <View
+          style={{
+            position: 'absolute',
+            width: size,
+            height: size,
+            borderRadius: size / 2,
+            borderWidth: STROKE,
+            borderColor: TRACK_COLOR,
+          }}
+        />
+        <PolarChart
+          data={pieData}
+          labelKey="label"
+          valueKey="value"
+          colorKey="color"
+        >
+          <Pie.Chart innerRadius={innerRadiusPercent} />
+        </PolarChart>
+      </View>
       <View className="flex-1 gap-2">
         <Text className="text-muted text-xs">Total</Text>
         <Text className="text-white text-xl font-bold">{formatBRL(total)}</Text>

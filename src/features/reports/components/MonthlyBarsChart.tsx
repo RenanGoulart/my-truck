@@ -1,6 +1,5 @@
-import { Fragment } from 'react';
 import { Text, View } from 'react-native';
-import Svg, { Rect } from 'react-native-svg';
+import { BarGroup, CartesianChart } from 'victory-native';
 
 import type { MonthlyBucket } from '../services/aggregations';
 
@@ -9,55 +8,44 @@ type Props = {
   height?: number;
 };
 
-const PADDING = 24;
-const BAR_GAP = 4;
-const GROUP_GAP_RATIO = 0.35;
 const INCOME = '#22C55E';
 const EXPENSE = '#EF4444';
 
 export function MonthlyBarsChart({ data, height = 200 }: Props) {
-  const width = 320;
   const max = Math.max(
     1,
     ...data.map((d) => Math.max(d.incomeCents, d.expenseCents))
   );
 
-  const plotH = height - PADDING * 2;
-  const plotW = width - PADDING * 2;
-  const groupCount = data.length;
-  const groupW = plotW / groupCount;
-  const innerW = groupW * (1 - GROUP_GAP_RATIO);
-  const barW = (innerW - BAR_GAP) / 2;
+  const chartData = data.map((d) => ({
+    label: d.label,
+    income: d.incomeCents,
+    expense: d.expenseCents,
+  }));
 
   return (
     <View>
-      <Svg width="100%" height={height} viewBox={`0 0 ${width} ${height}`}>
-        {data.map((d, i) => {
-          const xGroup = PADDING + groupW * i + (groupW - innerW) / 2;
-          const incH = (d.incomeCents / max) * plotH;
-          const expH = (d.expenseCents / max) * plotH;
-          return (
-            <Fragment key={d.key}>
-              <Rect
-                x={xGroup}
-                y={PADDING + plotH - incH}
-                width={barW}
-                height={incH}
-                rx={3}
-                fill={INCOME}
-              />
-              <Rect
-                x={xGroup + barW + BAR_GAP}
-                y={PADDING + plotH - expH}
-                width={barW}
-                height={expH}
-                rx={3}
-                fill={EXPENSE}
-              />
-            </Fragment>
-          );
-        })}
-      </Svg>
+      <View style={{ height }}>
+        <CartesianChart
+          data={chartData}
+          xKey="label"
+          yKeys={['income', 'expense']}
+          domain={{ y: [0, max] }}
+          domainPadding={{ left: 24, right: 24, top: 8 }}
+        >
+          {({ points, chartBounds }) => (
+            <BarGroup
+              chartBounds={chartBounds}
+              betweenGroupPadding={0.35}
+              withinGroupPadding={0.05}
+              roundedCorners={{ topLeft: 3, topRight: 3 }}
+            >
+              <BarGroup.Bar points={points.income} color={INCOME} />
+              <BarGroup.Bar points={points.expense} color={EXPENSE} />
+            </BarGroup>
+          )}
+        </CartesianChart>
+      </View>
       <View className="flex-row justify-between px-2 mt-1">
         {data.map((d) => (
           <Text key={d.key} className="text-muted text-xs flex-1 text-center">
@@ -81,4 +69,3 @@ function Legend({ color, label }: { color: string; label: string }) {
     </View>
   );
 }
-
