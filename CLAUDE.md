@@ -14,6 +14,32 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Para um único teste: `npx jest caminho/do/arquivo.test.ts` ou `npx jest -t "nome do teste"`.
 - Não há script de lint configurado; tipagem é validada via `npx tsc --noEmit`.
 
+## Build
+
+Builds são feitos via **EAS Build**. Perfis em `eas.json`: `development` (dev client, APK), `preview` (APK interno para testes), `production` (AAB com `autoIncrement`).
+
+### Build manual
+
+- APK de teste na nuvem (EAS): `npm run build:apk` → roda `eas build -p android --profile preview`. Requer login em `eas login` e `EXPO_TOKEN`/conta configurada.
+- APK local (sem fila EAS, requer Android SDK/JDK): `npm run build:apk:local`.
+- Build de produção (AAB para Play Store): `eas build -p android --profile production`.
+- iOS: `eas build -p ios --profile <perfil>` (sem script npm dedicado).
+
+### Build automático (versões de teste)
+
+Workflow `.github/workflows/eas-build-apk.yml` dispara build `preview` (APK) no EAS:
+
+- **Manual**: via `workflow_dispatch` na aba Actions do GitHub (campo opcional `message` para rotular a build).
+- **Por tag**: `git tag v<versão>-test && git push origin v<versão>-test` (qualquer tag `v*-test`) dispara o workflow.
+- Pipeline: checkout → Node 20 → `expo/expo-github-action` (usa `secrets.EXPO_TOKEN`) → `npm ci` → `npx tsc --noEmit` → `npm test -- --ci` → `eas build --platform android --profile preview --non-interactive --no-wait`.
+- O APK gerado fica disponível no dashboard do Expo (distribuição `internal` do perfil `preview`).
+
+## Segurança
+
+- **Dados em repouso não são criptografados.** O SQLite local (`my-truck.db`) é aberto sem SQLCipher — `expo-sqlite` não oferece suporte nativo a encryption no SDK atual. Para habilitar seria necessário trocar para `op-sqlite` (ou similar) + `expo-secure-store` para a chave. Risco aceito enquanto o app for single-user local; reavaliar antes de qualquer distribuição com dados pessoais de terceiros.
+- Inputs de formulário validados via zod em `src/shared/lib/forms/schemas.ts` (com limites de tamanho).
+- Workflow `.github/workflows/eas-build-apk.yml` valida `inputs.message` e pina actions em SHA.
+
 ## Arquitetura
 
 App Expo Router (React Native + NativeWind) com persistência local em SQLite (`expo-sqlite`) e estado em Zustand. Não há backend — tudo vive no dispositivo.
