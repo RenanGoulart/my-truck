@@ -23,6 +23,7 @@ import {
   type TransactionFormValues,
 } from '@/shared/lib/forms/schemas';
 import { Button } from '@/shared/ui/Button';
+import { DateInput } from '@/shared/ui/DateInput';
 import { Input } from '@/shared/ui/Input';
 import { MoneyInput } from '@/shared/ui/MoneyInput';
 import { Screen } from '@/shared/ui/Screen';
@@ -50,6 +51,7 @@ export default function NewTransaction() {
       odometer: '',
       liters: '',
       pricePerLiter: '',
+      occurredAt: new Date(),
     },
     mode: 'onTouched',
   });
@@ -58,6 +60,7 @@ export default function NewTransaction() {
   const categoryId = watch('categoryId');
   const liters = watch('liters');
   const pricePerLiter = watch('pricePerLiter');
+  const occurredAt = watch('occurredAt');
 
   const categories = useMemo(() => categoriesByKind(kind), [categoriesByKind, kind]);
 
@@ -68,6 +71,9 @@ export default function NewTransaction() {
   const selectedCategory = categories.find((c) => c.id === categoryId);
   const isFuel =
     kind === 'expense' && selectedCategory?.name.toLowerCase() === 'combustível';
+  const isFrete =
+    kind === 'income' && selectedCategory?.name.toLowerCase() === 'frete';
+  const dateLabel = isFrete ? 'Data de carregamento' : 'Data';
 
   useEffect(() => {
     if (!isFuel) return;
@@ -82,7 +88,8 @@ export default function NewTransaction() {
     if (!isFuel || !truckId) return;
     let cancelled = false;
     (async () => {
-      const last = await transactionsRepo.lastOdometerBefore(truckId, Date.now());
+      const before = occurredAt ? occurredAt.getTime() : Date.now();
+      const last = await transactionsRepo.lastOdometerBefore(truckId, before);
       if (cancelled) return;
       if (!getValues('odometer') && last !== null) {
         setValue('odometer', String(last));
@@ -91,7 +98,7 @@ export default function NewTransaction() {
     return () => {
       cancelled = true;
     };
-  }, [isFuel, truckId, setValue, getValues]);
+  }, [isFuel, truckId, occurredAt, setValue, getValues]);
 
   const onSubmit = async (values: TransactionFormValues) => {
     try {
@@ -100,7 +107,7 @@ export default function NewTransaction() {
         categoryId: values.categoryId,
         kind: values.kind,
         amountCents: values.amountCents,
-        occurredAt: new Date(),
+        occurredAt: values.occurredAt,
         description: values.description.trim() || undefined,
         odometer: parseDecimal(values.odometer),
         liters: parseDecimal(values.liters),
@@ -136,6 +143,19 @@ export default function NewTransaction() {
               name="kind"
               render={({ field: { value, onChange } }) => (
                 <KindToggle value={value} onChange={onChange} />
+              )}
+            />
+
+            <Controller
+              control={control}
+              name="occurredAt"
+              render={({ field: { value, onChange } }) => (
+                <DateInput
+                  label={dateLabel}
+                  valueDate={value}
+                  onChange={onChange}
+                  error={errors.occurredAt?.message}
+                />
               )}
             />
 

@@ -1,5 +1,7 @@
 import {
   categoryFormSchema,
+  formatDateBR,
+  parseDateBR,
   transactionFormSchema,
   truckFormSchema,
 } from '../schemas';
@@ -32,6 +34,7 @@ describe('transactionFormSchema', () => {
     odometer: '',
     liters: '',
     pricePerLiter: '',
+    occurredAt: new Date(),
   };
 
   it('aceita descrição dentro do limite', () => {
@@ -48,6 +51,51 @@ describe('transactionFormSchema', () => {
       description: 'a'.repeat(501),
     });
     expect(r.success).toBe(false);
+  });
+
+  it('rejeita data muito no futuro', () => {
+    const future = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+    const r = transactionFormSchema.safeParse({ ...base, occurredAt: future });
+    expect(r.success).toBe(false);
+  });
+
+  it('aceita data de hoje', () => {
+    const r = transactionFormSchema.safeParse({ ...base, occurredAt: new Date() });
+    expect(r.success).toBe(true);
+  });
+});
+
+describe('parseDateBR', () => {
+  it('parseia data válida', () => {
+    const d = parseDateBR('15/03/2026');
+    expect(d).toBeInstanceOf(Date);
+    expect(d?.getFullYear()).toBe(2026);
+    expect(d?.getMonth()).toBe(2);
+    expect(d?.getDate()).toBe(15);
+  });
+
+  it('rejeita 31/02/2026 (dia inválido)', () => {
+    expect(parseDateBR('31/02/2026')).toBeUndefined();
+  });
+
+  it('aceita 29/02/2024 (ano bissexto)', () => {
+    expect(parseDateBR('29/02/2024')).toBeInstanceOf(Date);
+  });
+
+  it('rejeita 29/02/2025 (não bissexto)', () => {
+    expect(parseDateBR('29/02/2025')).toBeUndefined();
+  });
+
+  it('rejeita string mal formada', () => {
+    expect(parseDateBR('1/2/2026')).toBeUndefined();
+    expect(parseDateBR('15-03-2026')).toBeUndefined();
+    expect(parseDateBR('')).toBeUndefined();
+  });
+});
+
+describe('formatDateBR', () => {
+  it('formata em dd/MM/yyyy', () => {
+    expect(formatDateBR(new Date(2026, 2, 5))).toBe('05/03/2026');
   });
 });
 

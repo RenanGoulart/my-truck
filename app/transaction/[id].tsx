@@ -26,6 +26,7 @@ import {
 } from '@/shared/lib/forms/schemas';
 import { fromCents } from '@/shared/lib/money';
 import { Button } from '@/shared/ui/Button';
+import { DateInput } from '@/shared/ui/DateInput';
 import { Input } from '@/shared/ui/Input';
 import { MoneyInput } from '@/shared/ui/MoneyInput';
 import { Screen } from '@/shared/ui/Screen';
@@ -58,6 +59,7 @@ export default function EditTransaction() {
       odometer: '',
       liters: '',
       pricePerLiter: '',
+      occurredAt: new Date(),
     },
     mode: 'onTouched',
   });
@@ -66,6 +68,7 @@ export default function EditTransaction() {
   const categoryId = watch('categoryId');
   const liters = watch('liters');
   const pricePerLiter = watch('pricePerLiter');
+  const occurredAt = watch('occurredAt');
 
   useEffect(() => {
     (async () => {
@@ -88,6 +91,7 @@ export default function EditTransaction() {
           found.pricePerLiterCents !== undefined
             ? String(fromCents(found.pricePerLiterCents))
             : '',
+        occurredAt: found.occurredAt,
       });
     })();
   }, [id, reset]);
@@ -97,6 +101,9 @@ export default function EditTransaction() {
   const selectedCategory = categories.find((c) => c.id === categoryId);
   const isFuel =
     kind === 'expense' && selectedCategory?.name.toLowerCase() === 'combustível';
+  const isFrete =
+    kind === 'income' && selectedCategory?.name.toLowerCase() === 'frete';
+  const dateLabel = isFrete ? 'Data de carregamento' : 'Data';
 
   useEffect(() => {
     if (!isFuel) return;
@@ -111,10 +118,8 @@ export default function EditTransaction() {
     if (!isFuel || !truckId || !tx) return;
     let cancelled = false;
     (async () => {
-      const last = await transactionsRepo.lastOdometerBefore(
-        truckId,
-        tx.occurredAt.getTime()
-      );
+      const before = (occurredAt ?? tx.occurredAt).getTime();
+      const last = await transactionsRepo.lastOdometerBefore(truckId, before);
       if (cancelled) return;
       if (!getValues('odometer') && last !== null) {
         setValue('odometer', String(last));
@@ -123,7 +128,7 @@ export default function EditTransaction() {
     return () => {
       cancelled = true;
     };
-  }, [isFuel, truckId, tx, setValue, getValues]);
+  }, [isFuel, truckId, tx, occurredAt, setValue, getValues]);
 
   if (!tx) {
     return (
@@ -142,6 +147,7 @@ export default function EditTransaction() {
         kind: values.kind,
         amountCents: values.amountCents,
         categoryId: values.categoryId,
+        occurredAt: values.occurredAt,
         description: values.description.trim() || undefined,
         odometer: isFuel ? parseDecimal(values.odometer) : undefined,
         liters: isFuel ? parseDecimal(values.liters) : undefined,
@@ -192,6 +198,19 @@ export default function EditTransaction() {
               name="kind"
               render={({ field: { value, onChange } }) => (
                 <KindToggle value={value} onChange={onChange} />
+              )}
+            />
+
+            <Controller
+              control={control}
+              name="occurredAt"
+              render={({ field: { value, onChange } }) => (
+                <DateInput
+                  label={dateLabel}
+                  valueDate={value}
+                  onChange={onChange}
+                  error={errors.occurredAt?.message}
+                />
               )}
             />
 

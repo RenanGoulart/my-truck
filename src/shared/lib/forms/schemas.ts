@@ -1,3 +1,4 @@
+import { format, isValid, parse } from 'date-fns';
 import { z } from 'zod';
 
 const decimalString = z
@@ -6,6 +7,19 @@ const decimalString = z
     (v) => v.trim() === '' || !Number.isNaN(Number(v.trim().replace(',', '.'))),
     { message: 'Número inválido' }
   );
+
+export function parseDateBR(input: string): Date | undefined {
+  const trimmed = input.trim();
+  if (trimmed.length !== 10) return undefined;
+  const d = parse(trimmed, 'dd/MM/yyyy', new Date());
+  if (!isValid(d)) return undefined;
+  if (d.getFullYear() < 1970) return undefined;
+  return d;
+}
+
+export function formatDateBR(d: Date): string {
+  return format(d, 'dd/MM/yyyy');
+}
 
 export const truckFormSchema = z.object({
   nickname: z.string().trim().min(1, 'Informe o apelido').max(40, 'Máx. 40 caracteres'),
@@ -25,6 +39,11 @@ export const transactionFormSchema = z.object({
   odometer: decimalString,
   liters: decimalString,
   pricePerLiter: decimalString,
+  occurredAt: z
+    .date({ message: 'Data inválida' })
+    .refine((d) => d.getTime() <= Date.now() + 24 * 60 * 60 * 1000, {
+      message: 'Data não pode estar no futuro',
+    }),
 });
 export type TransactionFormValues = z.infer<typeof transactionFormSchema>;
 
