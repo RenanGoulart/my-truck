@@ -1,5 +1,6 @@
 import { type ReactNode, useEffect } from 'react';
 
+import { useBackupOnBoot } from '@/features/backup/hooks/useBackupOnBoot';
 import { useCategoriesStore } from '@/features/categories/store/categories.store';
 import { useTransactionsStore } from '@/features/transactions/store/transactions.store';
 import { useTruckStore } from '@/features/truck/store/truck.store';
@@ -20,6 +21,8 @@ export function StoresHydrator({ children }: Props) {
   useEffect(() => {
     if (truck) setTruck(truck.id);
   }, [truck, setTruck]);
+
+  useBackupOnBoot();
 
   return <>{children}</>;
 }

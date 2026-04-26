@@ -37,7 +37,10 @@
     },
     "plugins": [
       "expo-router",
-      "expo-sqlite"
+      "expo-sqlite",
+      "expo-background-task",
+      "expo-task-manager",
+      "expo-secure-store"
     ],
     "experiments": {
       "typedRoutes": true
@@ -46,6 +49,13 @@
       "router": {},
       "eas": {
         "projectId": "98f204a7-7f2f-4728-80d7-30e090f9d6df"
+      },
+      "firebase": {
+        "apiKey": "REPLACE_ME",
+        "authDomain": "REPLACE_ME.firebaseapp.com",
+        "projectId": "REPLACE_ME",
+        "storageBucket": "REPLACE_ME.appspot.com",
+        "appId": "REPLACE_ME"
       }
     },
     "owner": "renangoulart"
