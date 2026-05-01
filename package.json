@@ -9,7 +9,8 @@
     "web": "expo start --web",
     "test": "jest",
     "build:apk": "eas build -p android --profile preview",
-    "build:apk:local": "eas build -p android --profile preview --local"
+    "build:apk:local": "eas build -p android --profile preview --local",
+    "update:preview": "eas update --channel preview --message \"Preview update\""
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.3",
