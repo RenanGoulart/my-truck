@@ -12,7 +12,7 @@ const NAME_TO_ICON: Record<string, AntDesignName> = {
   combustível: 'dashboard',
   pedágio: 'swap',
   manutenção: 'tool',
-  pneus: 'loading',
+  pneus: 'chrome',
   alimentação: 'coffee',
   hospedagem: 'home',
   documentação: 'file-text',
