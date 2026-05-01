@@ -26,8 +26,8 @@ const ENTRIES: Entry[] = [
   },
   {
     title: 'Backup',
-    subtitle: 'Criar e gerenciar backup',
-    icon: 'cloud',
+    subtitle: 'Exportar e restaurar dados',
+    icon: 'save',
     href: '/settings/backup',
   },
 ];
