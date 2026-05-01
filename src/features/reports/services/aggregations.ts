@@ -1,4 +1,4 @@
-import { endOfMonth, format, startOfMonth, subMonths } from 'date-fns';
+import { addMonths, endOfMonth, format, startOfMonth, startOfYear, subMonths } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
 import type { Category } from '@/features/categories/types';
@@ -11,21 +11,52 @@ export type MonthlyBucket = {
   expenseCents: number;
 };
 
+type MonthlyByKindOptions =
+  | {
+      mode: 'rolling';
+      months: number;
+      ref?: Date;
+    }
+  | {
+      mode: 'calendar-year';
+      ref?: Date;
+    };
+
 export const monthlyByKind = (
   txs: Transaction[],
-  months = 6,
-  ref = new Date()
+  optionsOrMonths: number | MonthlyByKindOptions = 6,
+  legacyRef = new Date()
 ): MonthlyBucket[] => {
+  const options =
+    typeof optionsOrMonths === 'number'
+      ? ({ mode: 'rolling', months: optionsOrMonths, ref: legacyRef } as const)
+      : optionsOrMonths;
+  const ref = options.ref ?? new Date();
   const buckets: MonthlyBucket[] = [];
-  for (let i = months - 1; i >= 0; i--) {
-    const d = subMonths(ref, i);
-    buckets.push({
-      key: format(d, 'yyyy-MM'),
-      label: format(d, 'MMM', { locale: ptBR }),
-      incomeCents: 0,
-      expenseCents: 0,
-    });
+
+  if (options.mode === 'calendar-year') {
+    const start = startOfYear(ref);
+    for (let i = 0; i < 12; i++) {
+      const d = addMonths(start, i);
+      buckets.push({
+        key: format(d, 'yyyy-MM'),
+        label: format(d, 'MMM', { locale: ptBR }),
+        incomeCents: 0,
+        expenseCents: 0,
+      });
+    }
+  } else {
+    for (let i = options.months - 1; i >= 0; i--) {
+      const d = subMonths(ref, i);
+      buckets.push({
+        key: format(d, 'yyyy-MM'),
+        label: format(d, 'MMM', { locale: ptBR }),
+        incomeCents: 0,
+        expenseCents: 0,
+      });
+    }
   }
+
   const index = new Map(buckets.map((b) => [b.key, b]));
 
   for (const t of txs) {

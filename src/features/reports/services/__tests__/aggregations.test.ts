@@ -57,6 +57,32 @@ describe('monthlyByKind', () => {
     );
     expect(buckets.every((b) => b.incomeCents === 0 && b.expenseCents === 0)).toBe(true);
   });
+  test('retorna 12 buckets para uma janela movel de 12 meses', () => {
+    const ref = new Date('2026-05-15T12:00:00Z');
+    const buckets = monthlyByKind([], { mode: 'rolling', months: 12, ref });
+
+    expect(buckets).toHaveLength(12);
+    expect(buckets[0].key).toBe('2025-06');
+    expect(buckets[11].key).toBe('2026-05');
+  });
+
+  test('retorna buckets do ano calendario', () => {
+    const ref = new Date('2026-05-15T12:00:00Z');
+    const buckets = monthlyByKind(
+      [
+        tx({ kind: 'income', amountCents: 10_000, occurredAt: new Date('2026-01-03T12:00:00Z') }),
+        tx({ kind: 'expense', amountCents: 2_000, occurredAt: new Date('2026-12-10T12:00:00Z') }),
+        tx({ kind: 'expense', amountCents: 999, occurredAt: new Date('2025-12-10T12:00:00Z') }),
+      ],
+      { mode: 'calendar-year', ref }
+    );
+
+    expect(buckets).toHaveLength(12);
+    expect(buckets[0].key).toBe('2026-01');
+    expect(buckets[11].key).toBe('2026-12');
+    expect(buckets[0].incomeCents).toBe(10_000);
+    expect(buckets[11].expenseCents).toBe(2_000);
+  });
 });
 
 describe('monthRange', () => {

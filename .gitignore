@@ -44,3 +44,9 @@ yarn-error.*
 
 # Claude Code local settings
 .claude/settings.local.json
+
+# Superpowers local brainstorming companion
+.superpowers/
+
+# Codex local run logs
+.codex/*.log
