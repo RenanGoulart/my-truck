@@ -24,6 +24,12 @@ const ENTRIES: Entry[] = [
     icon: 'appstore',
     href: '/settings/categories',
   },
+  {
+    title: 'Backup',
+    subtitle: 'Criar e gerenciar backup',
+    icon: 'cloud',
+    href: '/settings/backup',
+  },
 ];
 
 export default function SettingsHub() {
