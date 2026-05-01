@@ -2,13 +2,18 @@ import type { SQLiteDatabase } from 'expo-sqlite';
 
 import { migration001Init } from './001_init';
 import { migration002Seed } from './002_seed';
+import { migration003BackupMeta } from './003_backup_meta';
 
 export type Migration = {
   version: number;
   up: (db: SQLiteDatabase) => Promise<void>;
 };
 
-const migrations: Migration[] = [migration001Init, migration002Seed];
+const migrations: Migration[] = [
+  migration001Init,
+  migration002Seed,
+  migration003BackupMeta,
+];
 
 export const runMigrations = async (db: SQLiteDatabase): Promise<void> => {
   await db.execAsync(

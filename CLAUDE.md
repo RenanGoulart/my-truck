@@ -55,6 +55,7 @@ App Expo Router (React Native + NativeWind) com persistência local em SQLite (`
   - `store/` — Zustand store que orquestra o repositório e expõe ações para a UI. Stores dependem de `truckId` ser setado antes de `load()`.
   - `services/` — lógica pura (agregações, cálculos) usada por dashboard/reports. Devem ser puras e unit-testáveis sem banco.
   - `components/` — UI específica da feature.
+  - **Exceção:** `src/features/backup/services/exporter.ts` lê o banco direto via `getDb()` por necessidade (leitura crua de tabelas inteiras para o formato de backup). Toda outra feature continua passando por `repository/`.
 - `src/shared/` — `ui/` (componentes reusáveis), `lib/` (helpers puros: datas, moeda, schemas de formulário em `lib/forms/`), `hooks/`, `theme/`.
 
 ### Fluxo de dados
