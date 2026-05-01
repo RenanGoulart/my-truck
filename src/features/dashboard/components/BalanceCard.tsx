@@ -8,17 +8,24 @@ type Props = {
   balanceCents: number;
   incomeCents: number;
   expenseCents: number;
+  periodLabel: string;
 };
 
-export function BalanceCard({ balanceCents, incomeCents, expenseCents }: Props) {
+export function BalanceCard({
+  balanceCents,
+  incomeCents,
+  expenseCents,
+  periodLabel,
+}: Props) {
   const positive = balanceCents >= 0;
   const color = positive ? '#22C55E' : '#EF4444';
 
   return (
     <Card className="bg-surface">
       <Text className="text-muted text-xs uppercase tracking-wide">
-        Saldo do mês
+        Saldo do período
       </Text>
+      <Text className="mt-1 text-muted text-sm">{periodLabel}</Text>
       <Text className="mt-1 text-4xl font-bold" style={{ color }}>
         {formatBRL(balanceCents)}
       </Text>

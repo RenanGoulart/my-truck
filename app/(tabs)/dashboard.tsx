@@ -13,6 +13,7 @@ import { useTruckStore } from '@/features/truck/store/truck.store';
 import {
   emptyTransactionsDescription,
   emptyTransactionsTitle,
+  periodDisplayLabel,
   recentTransactionsTitle,
 } from '@/shared/lib/periodFilter';
 import { EmptyState } from '@/shared/ui/EmptyState';
@@ -73,6 +74,8 @@ export default function Dashboard() {
     [items, categories, incomeCents, expenseCents, truck?.initialOdometer, baselineOdometer]
   );
 
+  const periodLabel = periodDisplayLabel(periodMode, selectedMonth);
+
   const recent = items.slice(0, 5);
 
   return (
@@ -108,12 +111,14 @@ export default function Dashboard() {
           balanceCents={summary.balanceCents}
           incomeCents={summary.incomeCents}
           expenseCents={summary.expenseCents}
+          periodLabel={periodLabel}
         />
 
         <FuelCard
           fuelCostCents={summary.fuelCostCents}
           kmDriven={summary.kmDriven}
           costPerKmCents={summary.costPerKmCents}
+          periodLabel={periodLabel}
         />
 
         <View>

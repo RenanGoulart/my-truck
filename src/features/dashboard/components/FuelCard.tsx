@@ -8,18 +8,27 @@ type Props = {
   fuelCostCents: number;
   kmDriven: number | null;
   costPerKmCents: number | null;
+  periodLabel: string;
 };
 
-export function FuelCard({ fuelCostCents, kmDriven, costPerKmCents }: Props) {
+export function FuelCard({
+  fuelCostCents,
+  kmDriven,
+  costPerKmCents,
+  periodLabel,
+}: Props) {
   return (
     <Card>
       <View className="flex-row items-center">
         <View className="w-9 h-9 rounded-full bg-primary/20 items-center justify-center">
           <AntDesign name="dashboard" size={18} color="#FFC107" />
         </View>
-        <Text className="ml-3 text-white font-semibold text-base">
-          Combustível no mês
-        </Text>
+        <View className="ml-3 flex-1">
+          <Text className="text-white font-semibold text-base">
+            Combustível no período
+          </Text>
+          <Text className="text-muted text-xs">{periodLabel}</Text>
+        </View>
       </View>
       <View className="mt-4 flex-row">
         <View className="flex-1">
