@@ -24,6 +24,12 @@ const ENTRIES: Entry[] = [
     icon: 'appstore',
     href: '/settings/categories',
   },
+  {
+    title: 'Backup',
+    subtitle: 'Exportar e restaurar dados',
+    icon: 'save',
+    href: '/settings/backup',
+  },
 ];
 
 export default function SettingsHub() {
