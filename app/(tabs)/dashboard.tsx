@@ -10,8 +10,14 @@ import { TransactionListItem } from '@/features/transactions/components/Transact
 import { transactionsRepo } from '@/features/transactions/repository/transactions.repository';
 import { useTransactionsStore } from '@/features/transactions/store/transactions.store';
 import { useTruckStore } from '@/features/truck/store/truck.store';
+import {
+  emptyTransactionsDescription,
+  emptyTransactionsTitle,
+  recentTransactionsTitle,
+} from '@/shared/lib/periodFilter';
 import { EmptyState } from '@/shared/ui/EmptyState';
 import { Fab } from '@/shared/ui/Fab';
+import { PeriodFilterCard } from '@/shared/ui/PeriodFilterCard';
 import { Screen } from '@/shared/ui/Screen';
 
 export default function Dashboard() {
@@ -21,7 +27,12 @@ export default function Dashboard() {
   const expenseCents = useTransactionsStore((s) => s.expenseCents);
   const truckId = useTransactionsStore((s) => s.truckId);
   const period = useTransactionsStore((s) => s.period);
+  const periodMode = useTransactionsStore((s) => s.periodMode);
+  const selectedMonth = useTransactionsStore((s) => s.selectedMonth);
   const load = useTransactionsStore((s) => s.load);
+  const setPeriodMode = useTransactionsStore((s) => s.setPeriodMode);
+  const goToPreviousMonth = useTransactionsStore((s) => s.goToPreviousMonth);
+  const goToNextMonth = useTransactionsStore((s) => s.goToNextMonth);
   const categories = useCategoriesStore((s) => s.items);
 
   const [baselineOdometer, setBaselineOdometer] = useState<number | null>(null);
@@ -31,11 +42,22 @@ export default function Dashboard() {
   }, [truckId, load]);
 
   useEffect(() => {
+    let ignore = false;
+
     (async () => {
-      if (!truckId) return;
+      if (!truckId) {
+        setBaselineOdometer(null);
+        return;
+      }
+      setBaselineOdometer(null);
       const baseline = await transactionsRepo.lastOdometerBefore(truckId, period.from);
+      if (ignore) return;
       setBaselineOdometer(baseline);
     })();
+
+    return () => {
+      ignore = true;
+    };
   }, [truckId, period.from]);
 
   const summary = useMemo(
@@ -74,6 +96,14 @@ export default function Dashboard() {
           ) : null}
         </View>
 
+        <PeriodFilterCard
+          mode={periodMode}
+          selectedMonth={selectedMonth}
+          onModeChange={(mode) => void setPeriodMode(mode)}
+          onPreviousMonth={() => void goToPreviousMonth()}
+          onNextMonth={() => void goToNextMonth()}
+        />
+
         <BalanceCard
           balanceCents={summary.balanceCents}
           incomeCents={summary.incomeCents}
@@ -88,13 +118,13 @@ export default function Dashboard() {
 
         <View>
           <Text className="text-white text-base font-semibold mb-2">
-            Últimas transações
+            {recentTransactionsTitle(periodMode)}
           </Text>
           {recent.length === 0 ? (
             <EmptyState
               icon="swap"
-              title="Sem lançamentos neste mês"
-              description="Registre ganhos e gastos pelo botão +."
+              title={emptyTransactionsTitle(periodMode, selectedMonth)}
+              description={emptyTransactionsDescription(periodMode, selectedMonth)}
             />
           ) : (
             <View className="gap-2">
